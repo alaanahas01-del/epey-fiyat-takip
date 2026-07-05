@@ -20,9 +20,9 @@
   "link": "https://www.amazon.com.tr/dp/B0DGJ9XTZ1?m=A1UNQM1SR2CHM"
  },
  "iPhone 16 Plus": {
-  "fiyat": 67999.0,
-  "satici": "Media Markt",
-  "link": "https://www.mediamarkt.com.tr/tr/product/_apple-iphone-16-plus-128gb-akilli-telefon-siyah-mxvu3tua-1239597.html"
+  "fiyat": 67899.0,
+  "satici": "Amazon.com.tr",
+  "link": "https://www.amazon.com.tr/dp/B0DGJDYYB1?m=A1UNQM1SR2CHM"
  },
  "iPhone 16 Pro": {
   "fiyat": 102899.0,
@@ -40,14 +40,14 @@
   "link": "https://www.mediamarkt.com.tr/tr/product/_apple-md1r4tua-iphone-16e-128gb-akilli-telefon-beyaz-1244800.html"
  },
  "iPhone 17": {
-  "fiyat": 77487.21,
-  "satici": "n11.com",
-  "link": "https://www.n11.com/urun/apple-iphone-17-256-gb-apple-turkiye-garantili-100918382?magaza=tkmnbilisim&renk=adacayi&dahili-hafiza=256-gb"
+  "fiyat": 76999.0,
+  "satici": "Hepsiburada",
+  "link": "https://www.hepsiburada.com/apple-iphone-17-256-gb-siyah-p-HBCV00009Z3Y49?magaza=Hepsiburada"
  },
  "iPhone 17 Pro": {
   "fiyat": 107499.0,
-  "satici": "Pazarama",
-  "link": "https://www.pazarama.com/iphone-17-pro-256gb-deep-blue-mg8j4tua-p-195950627602?magaza=gurgencler-apple"
+  "satici": "Amazon.com.tr",
+  "link": "https://www.amazon.com.tr/dp/B0FQFYN66J?m=A1UNQM1SR2CHM"
  },
  "iPhone 17 Pro Max": {
   "fiyat": 119999.0,
