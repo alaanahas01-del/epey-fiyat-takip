@@ -1,20 +1,23 @@
 name: epey-fiyat
 on:
   schedule:
-    # ponytail: cron artik zamanlayici degil, yeniden-baslatici: dongu job'u ~5.5
-    # saatte bir biter/olur, kuyrukta bekleyen cron run'i taze IP ile devralir.
-    # Offset dakikalar cunku GitHub :00/:30 event'lerini sik atliyor.
+    # ponytail: asil mekanizma kendini zincirleyen workflow_dispatch; cron sadece
+    # zincir koparsa (CF blogu, job crash) yeniden baslatan yedek. GitHub bu repo
+    # icin cron event'lerinin cogunu atiyor (gozlenen: 4+ ardisik atlama, 1.5-4.5
+    # saatlik bosluklar), o yuzden zamanlama cron'a EMANET EDILMEZ.
     - cron: "6,21,36,51 * * * *"
   workflow_dispatch:
     inputs:
       dump:
-        description: "1 = tam listeyi Telegram'a gonder (tek seferlik, dongusuz)"
+        description: "1 = tam listeyi gonder (tek gecis); bos birak = araliksiz dongu baslat"
         default: "1"
 permissions:
   contents: write
+  actions: write
 concurrency:
-  # dispatch ayri grupta: dump istegi 5.5 saatlik dongunun arkasinda beklemesin
-  group: epey-fiyat-${{ github.event_name }}
+  # dump tek gecisi donguyu beklemesin diye ayri grup; tum dongu turleri
+  # (cron / zincir / manuel) tek grupta -> ayni anda en fazla 1 dongu.
+  group: epey-fiyat-${{ github.event.inputs.dump == '1' && 'dump' || 'loop' }}
   cancel-in-progress: false
 jobs:
   check:
@@ -37,9 +40,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # ponytail: araliksiz kontrol = job limiti dolana kadar dongu.
-          # Scraper CF'ye takilirsa (exit 1) job burada olur - bilerek: yeni job = yeni IP.
-          if [ "$GITHUB_EVENT_NAME" = "schedule" ]; then end=$((SECONDS + 330*60)); else end=$SECONDS; fi
+          # ponytail: araliksiz kontrol = job limitine kadar dongu; dump=1 tek gecis.
+          # Scraper CF'ye takilirsa (exit 1) job olur ve zincir adimi atlanir -
+          # kasitli: ayni IP'yi dovmek yerine cron yedegi taze IP ile baslatir.
+          if [ "$DUMP" = "1" ]; then end=$SECONDS; else end=$((SECONDS + 330*60)); fi
           while :; do
             xvfb-run -a python scraper.py
             git add epey-state.json
@@ -49,3 +53,8 @@ jobs:
             [ $SECONDS -lt $end ] || break
             sleep 120  # ponytail: ayni IP'den CF'yi isitmamak icin nefes payi; 0 yapma
           done
+      - name: Zinciri surdur (sonraki dongu job'unu tetikle)
+        if: success() && github.event.inputs.dump != '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run check.yml -R ${{ github.repository }} -f dump=
