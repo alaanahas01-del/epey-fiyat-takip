@@ -31,6 +31,7 @@ SLUG = re.compile(r'resim\.epey\.com/site/([a-z0-9-]+)\.')
 NAME = re.compile(r'title="(.+?) Apple iPhone')
 PRICE = re.compile(r'urun_fiyat_sort[^>]*>(\d+)<')
 LINK = re.compile(r'data-link="([^"]+)"')
+SATICI = re.compile(r'Satıcı:</strong>\s*([^|<]+)')  # pazaryeri alt saticisi, her satirda olmayabilir
 
 
 def cheapest(html):
@@ -44,9 +45,11 @@ def cheapest(html):
             continue
         p = int(price.group(1)) / 100  # urun_fiyat_sort kurus cinsinden
         if best is None or p < best[0]:
-            nm, lk = NAME.search(b), LINK.search(b)
-            best = (p, nm.group(1) if nm else slug.group(1),
-                    unquote(lk.group(1)) if lk else "")
+            nm, lk, st = NAME.search(b), LINK.search(b), SATICI.search(b)
+            who = nm.group(1) if nm else slug.group(1)
+            if st and st.group(1).strip().lower() != who.lower():
+                who += " (satıcı: %s)" % st.group(1).strip()
+            best = (p, who, unquote(lk.group(1)) if lk else "")
     return best
 
 
