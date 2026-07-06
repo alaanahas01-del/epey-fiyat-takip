@@ -1,8 +1,8 @@
 {
  "iPhone 15": {
   "fiyat": 47899.0,
-  "satici": "n11.com (satıcı: mediamarkt)",
-  "link": "https://www.n11.com/urun/apple-iphone-15-128-gb-apple-turkiye-garantili-43821353?magaza=mediamarkt&renk=siyah&dahili-hafiza=128-gb"
+  "satici": "Media Markt",
+  "link": "https://www.mediamarkt.com.tr/tr/product/_apple-iphone-15-128-gb-akilli-telefon-mavi-mtp43tua-1232436.html"
  },
  "iPhone 15 Pro": {
   "fiyat": 104999.0,
@@ -36,8 +36,8 @@
  },
  "iPhone 16e": {
   "fiyat": 41449.0,
-  "satici": "n11.com (satıcı: mediamarkt)",
-  "link": "https://www.n11.com/urun/apple-iphone-16e-128-gb-apple-turkiye-garantili-69886955?magaza=mediamarkt&renk=siyah&dahili-hafiza=128-gb"
+  "satici": "Media Markt",
+  "link": "https://www.mediamarkt.com.tr/tr/product/_apple-md1q4tua-iphone-16e-128gb-akilli-telefon-siyah-1244798.html"
  },
  "iPhone 17": {
   "fiyat": 77149.0,
@@ -61,7 +61,7 @@
  },
  "iPhone 17e": {
   "fiyat": 52449.0,
-  "satici": "n11.com (satıcı: mediamarkt)",
-  "link": "https://www.n11.com/urun/apple-iphone-17e-256-gb-apple-turkiye-garantili-120966170?magaza=mediamarkt&renk=beyaz&dahili-hafiza=256-gb"
+  "satici": "Media Markt",
+  "link": "https://www.mediamarkt.com.tr/tr/product/_apple-mhrw4tua-iphone-17e-256gb-akilli-telefon-beyaz-1252722.html"
  }
 }
