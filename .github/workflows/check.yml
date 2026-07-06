@@ -1,16 +1,20 @@
 name: epey-fiyat
 on:
   schedule:
-    - cron: "6,21,36,51 * * * *"  # ponytail: GitHub :00/:30 event'lerini sik atliyor; offset'li 15 dk cron ile fiili ~30 dk hedefleniyor. Hala seyrekse: cron-job.org -> workflow_dispatch
+    # ponytail: cron artik zamanlayici degil, yeniden-baslatici: dongu job'u ~5.5
+    # saatte bir biter/olur, kuyrukta bekleyen cron run'i taze IP ile devralir.
+    # Offset dakikalar cunku GitHub :00/:30 event'lerini sik atliyor.
+    - cron: "6,21,36,51 * * * *"
   workflow_dispatch:
     inputs:
       dump:
-        description: "1 = tam listeyi Telegram'a gonder"
+        description: "1 = tam listeyi Telegram'a gonder (tek seferlik, dongusuz)"
         default: "1"
 permissions:
   contents: write
 concurrency:
-  group: epey-fiyat
+  # dispatch ayri grupta: dump istegi 5.5 saatlik dongunun arkasinda beklemesin
+  group: epey-fiyat-${{ github.event_name }}
   cancel-in-progress: false
 jobs:
   check:
@@ -30,11 +34,18 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           DUMP: ${{ github.event.inputs.dump }}
-        run: xvfb-run -a python scraper.py
-      - name: Commit state
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add epey-state.json
-          git commit -m "state $(date -u +%FT%TZ)" || echo "degisiklik yok"
-          git push
+          # ponytail: araliksiz kontrol = job limiti dolana kadar dongu.
+          # Scraper CF'ye takilirsa (exit 1) job burada olur - bilerek: yeni job = yeni IP.
+          if [ "$GITHUB_EVENT_NAME" = "schedule" ]; then end=$((SECONDS + 330*60)); else end=$SECONDS; fi
+          while :; do
+            xvfb-run -a python scraper.py
+            git add epey-state.json
+            git commit -m "state $(date -u +%FT%TZ)" || true
+            git pull --rebase || git rebase --abort || true
+            git push || true
+            [ $SECONDS -lt $end ] || break
+            sleep 120  # ponytail: ayni IP'den CF'yi isitmamak icin nefes payi; 0 yapma
+          done
