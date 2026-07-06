@@ -1,7 +1,7 @@
 name: epey-fiyat
 on:
   schedule:
-    - cron: "*/30 * * * *"   # 30 dakikada bir (GitHub bazen birkaç dk geciktirir)
+    - cron: "6,21,36,51 * * * *"  # ponytail: GitHub :00/:30 event'lerini sik atliyor; offset'li 15 dk cron ile fiili ~30 dk hedefleniyor. Hala seyrekse: cron-job.org -> workflow_dispatch
   workflow_dispatch:
     inputs:
       dump:
