@@ -1,4 +1,4 @@
-# epey.com'daki 14 iPhone modelinin en ucuz SIFIR teklifini (Outlet/2.el ve
+# epey.com'daki 12 telefon modelinin (iPhone + Samsung) en ucuz SIFIR teklifini (Outlet/2.el ve
 # PTT AVM / Cicieksepeti / Idefix haric) gercek tarayiciyla (Playwright) ceker,
 # epey-state.json ile karsilastirip degisenleri Telegram'a bildirir, state'i yazar.
 # DUMP=1 ise tek seferlik tam listeyi gonderir (test/ilk calisma icin).
@@ -7,20 +7,18 @@ from urllib.parse import unquote
 from playwright.sync_api import sync_playwright
 
 MODELS = [
-    ("iPhone 15", "apple-iphone-15"),
-    ("iPhone 15 Plus", "apple-iphone-15-plus"),
-    ("iPhone 15 Pro", "apple-iphone-15-pro"),
-    ("iPhone 15 Pro Max", "apple-iphone-15-pro-max"),
-    ("iPhone 16", "apple-iphone-16"),
-    ("iPhone 16 Plus", "apple-iphone-16-plus"),
-    ("iPhone 16 Pro", "apple-iphone-16-pro"),
-    ("iPhone 16 Pro Max", "apple-iphone-16-pro-max"),
-    ("iPhone 16e", "apple-iphone-16e"),
-    ("iPhone 17", "apple-iphone-17"),
-    ("iPhone 17 Pro", "apple-iphone-17-pro"),
-    ("iPhone 17 Pro Max", "apple-iphone-17-pro-max"),
-    ("iPhone Air", "apple-iphone-air"),
-    ("iPhone 17e", "apple-iphone-17e"),
+    ("iPhone 17 Pro Max 256", "apple-iphone-17-pro-max"),
+    ("iPhone 17 Pro 256", "apple-iphone-17-pro"),
+    ("iPhone 17 256", "apple-iphone-17"),
+    ("iPhone 16 128", "apple-iphone-16"),
+    ("iPhone 15 128", "apple-iphone-15"),
+    ("Galaxy S26 Ultra 256", "samsung-galaxy-s26-ultra"),
+    ("Galaxy S26 256", "samsung-galaxy-s26"),
+    ("Galaxy S25 FE 256", "samsung-galaxy-s25-fe"),
+    ("Galaxy A57 256", "samsung-galaxy-a57-5g-256gb"),
+    ("Galaxy A57 128", "samsung-galaxy-a57"),
+    ("Galaxy A37 256", "samsung-galaxy-a37"),
+    ("Galaxy A37 128", "samsung-galaxy-a37-5g-128gb"),
 ]
 EXCLUDE = {"pttavm-com", "ciceksepeti-com", "idefix-com"}
 STATE = "epey-state.json"
@@ -28,7 +26,7 @@ UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like 
 
 OFFER = re.compile(r'<a[^>]+class="git[^"]*".*?</a>', re.S)
 SLUG = re.compile(r'resim\.epey\.com/site/([a-z0-9-]+)\.')
-NAME = re.compile(r'title="(.+?) Apple iPhone')
+NAME = re.compile(r'title="(.+?) (?:Apple iPhone|Samsung Galaxy)')
 PRICE = re.compile(r'urun_fiyat_sort[^>]*>(\d+)<')
 LINK = re.compile(r'data-link="([^"]+)"')
 SATICI = re.compile(r'Satıcı:</strong>\s*([^|<]+)')  # pazaryeri alt saticisi, her satirda olmayabilir
@@ -68,7 +66,7 @@ def tg(text):
 
 def fetch_all():
     """Tek tarayici baglami: ilk sayfada CF cozulur, cf_clearance cookie'si
-    sonraki 13 sayfada tekrar kullanilir."""
+    kalan sayfalarda tekrar kullanilir."""
     out = {}
     with sync_playwright() as pw:
         browser = pw.chromium.launch(
