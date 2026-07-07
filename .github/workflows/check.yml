@@ -1,14 +1,14 @@
 name: epey-bekci
 # Asil motor ev PC'si (pc_sweep.py, 5 dk'da bir, duz HTTP - ev IP'sinde CF yok).
-# Bu workflow sadece BEKCI + YEDEK:
-#  - heartbeat.txt 40 dk'dan eskiyse: Telegram'a bir kez "PC sustu" uyarisi
-#    (pc-down.flag ile dedup) ve Playwright ile tek yedek tarama denenir
-#    (Actions IP'lerini CF cogu zaman blokluyor; gecerse veri akmaya devam eder).
-#  - Kalp atisi tazeyse hicbir sey yapmadan yesil biter; flag varsa "PC geri
-#    geldi" mesaji atilip flag silinir.
+# Bu workflow sadece YEDEK: heartbeat.txt 40 dk'dan eskiyse (PC kapali/uykuda)
+# Playwright ile tek yedek tarama denenir (Actions IP'lerini CF cogu zaman
+# blokluyor; gecerse fiyat bildirimleri kesintisiz surer).
+# Kullanici istegi (2026-07-08): Telegram'a SADECE fiyat bildirimi gider;
+# "PC sustu/geri geldi" gibi operasyonel mesaj YOK. PC'nin durumu merak
+# edilirse iz: repo commit gecmisi (pc/yedek tarama) ve Actions loglari.
 # Eski kendini zincirleyen 5,5 saatlik dongu KALDIRILDI (CF, Actions IP'lerini
 # ~24 saat kesintisiz blokladi; zincir motor olamayacagini kanitladi).
-# Cron gecikmeli calisabilir (GitHub bu reponun cron'larini atliyor) - bekci
+# Cron gecikmeli calisabilir (GitHub bu reponun cron'larini atliyor) - yedek
 # icin sorun degil, zamanlama PC'de.
 on:
   schedule:
@@ -31,33 +31,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Kalp atisi kontrolu
         id: hb
-        env:
-          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          tg() { curl -s -m 30 "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" -d chat_id="${TG_CHAT}" --data-urlencode text="$1" >/dev/null || true; }
-          sync() { git add -A; git commit -m "$1" || true; git pull --rebase -X theirs || git rebase --abort || true; git push || true; }
           hb=$(cat heartbeat.txt 2>/dev/null || echo 1970-01-01T00:00:00Z)
           age=$(( ($(date +%s) - $(date -d "$hb" +%s)) / 60 ))
           echo "kalp atisi $age dk once"
-          if [ "${{ inputs.dump }}" = "1" ]; then
-            echo "fallback=true" >> "$GITHUB_OUTPUT"   # elle tam liste istegi
-          elif [ "$age" -lt 40 ]; then
-            if [ -f pc-down.flag ]; then
-              rm pc-down.flag
-              tg "PC geri geldi - takip yine PC'de ($age dk once kalp atisi)"
-              sync "pc geri geldi"
-            fi
-            echo "fallback=false" >> "$GITHUB_OUTPUT"
-          else
-            if [ ! -f pc-down.flag ]; then
-              touch pc-down.flag
-              tg "PC'den $age dk'dir kalp atisi yok (kapali/uykuda?) - Actions yedege geciyor, CF izin verirse veri devam eder"
-              sync "pc sustu"
-            fi
+          if [ "${{ inputs.dump }}" = "1" ] || [ "$age" -ge 40 ]; then
             echo "fallback=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "fallback=false" >> "$GITHUB_OUTPUT"
           fi
       - name: Install (yedek tarama icin)
         if: steps.hb.outputs.fallback == 'true'
@@ -72,7 +53,7 @@ jobs:
           exit 1
       - name: Yedek tarama (tek gecis, Playwright)
         if: steps.hb.outputs.fallback == 'true'
-        continue-on-error: true  # CF bloklarsa scraper flag+mesajla susturur; job yesil kalir, mail firtinasi olmaz
+        continue-on-error: true  # CF bloklarsa sessizce biter; job yesil kalir, mail firtinasi olmaz
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

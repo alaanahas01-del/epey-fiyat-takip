@@ -51,7 +51,6 @@ def norm(s):
 
 ALLOWED = {norm(s) for s in SELLERS}
 STATE = "epey-state.json"
-BLOCKFLAG = "cf-blocked.flag"  # varligi = onceki calisma CF'ye takildi (tg mesaji tekrarlanmaz)
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 
 OFFER = re.compile(r'<a[^>]+class="git[^"]*".*?</a>', re.S)
@@ -161,15 +160,10 @@ def main():
         pages = fetch_all()  # datacenter IP: duz HTTP CF'ye takildi, tarayici dene
 
     if blocked(pages):
-        if not os.path.exists(BLOCKFLAG):  # sadece ilk blokta mesaj at, retry'larda sus
-            open(BLOCKFLAG, "w").write("1")
-            kim = "ev IP" if os.environ.get("PLAIN") == "1" else "GitHub Actions IP"
-            tg("Cloudflare epey.com'u engelledi (%s) - duzelene kadar denemeye devam" % kim)
+        # kullanici istegi (2026-07-08): Telegram'a SADECE fiyat bildirimi gider,
+        # operasyonel mesaj (CF blogu vb.) gitmez; iz sadece log/commit'lerde.
         print("BLOCKED by Cloudflare")
         sys.exit(1)
-    if os.path.exists(BLOCKFLAG):
-        os.remove(BLOCKFLAG)
-        tg("epey erisimi geri geldi - takip devam ediyor")
 
     new = dict(old)
     lines = []
