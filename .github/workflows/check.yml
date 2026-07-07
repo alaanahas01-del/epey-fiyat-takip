@@ -41,12 +41,21 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # ponytail: araliksiz kontrol = job limitine kadar dongu; dump=1 tek gecis.
-          # Scraper CF'ye takilirsa (exit 1) job olur ve zincir adimi atlanir -
-          # kasitli: ayni IP'yi dovmek yerine cron yedegi taze IP ile baslatir.
+          # Scraper olurse (CF blogu vb.) job KIRMIZIYA DUSMEZ: flag commit'lenir,
+          # 10 dk beklenir, zincir adimi yine calisir -> taze runner IP'siyle retry.
+          # Bedeli: kalici bir bug'da sessiz yesil dongu olabilir; Telegram'dan
+          # fiyat kesilirse loglara bak. Cron sadece derin yedek (runner/dispatch coksse).
           if [ "$DUMP" = "1" ]; then end=$SECONDS; else end=$((SECONDS + 330*60)); fi
           while :; do
-            xvfb-run -a python scraper.py
-            git add epey-state.json
+            if ! xvfb-run -a python scraper.py; then
+              git add -A
+              git commit -m "cf blocked $(date -u +%FT%TZ)" || true
+              git pull --rebase || git rebase --abort || true
+              git push || true
+              [ "$DUMP" = "1" ] || sleep 600  # ayni IP zaten yanik; bekle, zincir taze IP alsin
+              break
+            fi
+            git add -A
             git commit -m "state $(date -u +%FT%TZ)" || true
             git pull --rebase || git rebase --abort || true
             git push || true
