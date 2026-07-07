@@ -1,69 +1,88 @@
-name: epey-fiyat
+name: epey-bekci
+# Asil motor ev PC'si (pc_sweep.py, 5 dk'da bir, duz HTTP - ev IP'sinde CF yok).
+# Bu workflow sadece BEKCI + YEDEK:
+#  - heartbeat.txt 40 dk'dan eskiyse: Telegram'a bir kez "PC sustu" uyarisi
+#    (pc-down.flag ile dedup) ve Playwright ile tek yedek tarama denenir
+#    (Actions IP'lerini CF cogu zaman blokluyor; gecerse veri akmaya devam eder).
+#  - Kalp atisi tazeyse hicbir sey yapmadan yesil biter; flag varsa "PC geri
+#    geldi" mesaji atilip flag silinir.
+# Eski kendini zincirleyen 5,5 saatlik dongu KALDIRILDI (CF, Actions IP'lerini
+# ~24 saat kesintisiz blokladi; zincir motor olamayacagini kanitladi).
+# Cron gecikmeli calisabilir (GitHub bu reponun cron'larini atliyor) - bekci
+# icin sorun degil, zamanlama PC'de.
 on:
   schedule:
-    # ponytail: asil mekanizma kendini zincirleyen workflow_dispatch; cron sadece
-    # zincir koparsa (CF blogu, job crash) yeniden baslatan yedek. GitHub bu repo
-    # icin cron event'lerinin cogunu atiyor (gozlenen: 4+ ardisik atlama, 1.5-4.5
-    # saatlik bosluklar), o yuzden zamanlama cron'a EMANET EDILMEZ.
-    - cron: "6,21,36,51 * * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
     inputs:
       dump:
-        description: "1 = tam listeyi gonder (tek gecis); 0 = araliksiz dongu baslat (BOS BIRAKMA: bos input'a GitHub default'u uygular)"
-        default: "1"
+        description: "1 = Actions'tan Playwright ile tam liste gonder (test)"
+        default: "0"
 permissions:
   contents: write
-  actions: write
 concurrency:
-  # dump tek gecisi donguyu beklemesin diye ayri grup; tum dongu turleri
-  # (cron / zincir / manuel) tek grupta -> ayni anda en fazla 1 dongu.
-  group: epey-fiyat-${{ github.event.inputs.dump == '1' && 'dump' || 'loop' }}
+  group: epey-bekci
   cancel-in-progress: false
 jobs:
-  check:
+  bekci:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Install
-        run: |
-          pip install playwright
-          python -m playwright install --with-deps chromium
-          sudo apt-get install -y xvfb
-      - name: Run
+      - name: Kalp atisi kontrolu
+        id: hb
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          DUMP: ${{ github.event.inputs.dump }}
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # ponytail: araliksiz kontrol = job limitine kadar dongu; dump=1 tek gecis.
-          # Scraper olurse (CF blogu vb.) job KIRMIZIYA DUSMEZ: flag commit'lenir,
-          # 10 dk beklenir, zincir adimi yine calisir -> taze runner IP'siyle retry.
-          # Bedeli: kalici bir bug'da sessiz yesil dongu olabilir; Telegram'dan
-          # fiyat kesilirse loglara bak. Cron sadece derin yedek (runner/dispatch coksse).
-          if [ "$DUMP" = "1" ]; then end=$SECONDS; else end=$((SECONDS + 330*60)); fi
-          while :; do
-            if ! xvfb-run -a python scraper.py; then
-              git add -A
-              git commit -m "cf blocked $(date -u +%FT%TZ)" || true
-              git pull --rebase || git rebase --abort || true
-              git push || true
-              [ "$DUMP" = "1" ] || sleep 600  # ayni IP zaten yanik; bekle, zincir taze IP alsin
-              break
+          tg() { curl -s -m 30 "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" -d chat_id="${TG_CHAT}" --data-urlencode text="$1" >/dev/null || true; }
+          sync() { git add -A; git commit -m "$1" || true; git pull --rebase -X theirs || git rebase --abort || true; git push || true; }
+          hb=$(cat heartbeat.txt 2>/dev/null || echo 1970-01-01T00:00:00Z)
+          age=$(( ($(date +%s) - $(date -d "$hb" +%s)) / 60 ))
+          echo "kalp atisi $age dk once"
+          if [ "${{ inputs.dump }}" = "1" ]; then
+            echo "fallback=true" >> "$GITHUB_OUTPUT"   # elle tam liste istegi
+          elif [ "$age" -lt 40 ]; then
+            if [ -f pc-down.flag ]; then
+              rm pc-down.flag
+              tg "PC geri geldi - takip yine PC'de ($age dk once kalp atisi)"
+              sync "pc geri geldi"
             fi
-            git add -A
-            git commit -m "state $(date -u +%FT%TZ)" || true
-            git pull --rebase || git rebase --abort || true
-            git push || true
-            [ $SECONDS -lt $end ] || break
-            sleep 120  # ponytail: ayni IP'den CF'yi isitmamak icin nefes payi; 0 yapma
+            echo "fallback=false" >> "$GITHUB_OUTPUT"
+          else
+            if [ ! -f pc-down.flag ]; then
+              touch pc-down.flag
+              tg "PC'den $age dk'dir kalp atisi yok (kapali/uykuda?) - Actions yedege geciyor, CF izin verirse veri devam eder"
+              sync "pc sustu"
+            fi
+            echo "fallback=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install (yedek tarama icin)
+        if: steps.hb.outputs.fallback == 'true'
+        continue-on-error: true
+        run: |
+          for i in 1 2 3; do  # ponytail: apt/depo ariza sinifi (07-07'de zinciri kopardi) icin retry
+            pip install playwright \
+              && python -m playwright install --with-deps chromium \
+              && sudo apt-get install -y xvfb && exit 0
+            echo "install deneme $i basarisiz"; sleep 60
           done
-      - name: Zinciri surdur (sonraki dongu job'unu tetikle)
-        if: success() && github.event.inputs.dump != '1'
+          exit 1
+      - name: Yedek tarama (tek gecis, Playwright)
+        if: steps.hb.outputs.fallback == 'true'
+        continue-on-error: true  # CF bloklarsa scraper flag+mesajla susturur; job yesil kalir, mail firtinasi olmaz
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run check.yml -R ${{ github.repository }} -f dump=0
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DUMP: ${{ inputs.dump }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          xvfb-run -a python scraper.py || true
+          # heartbeat.txt'ye DOKUNMA: o sadece PC'nin canlilik sinyali
+          git add -A
+          git commit -m "yedek tarama $(date -u +%FT%TZ)" || true
+          git pull --rebase -X theirs || git rebase --abort || true
+          git push || true
