@@ -1,5 +1,6 @@
-# epey.com'daki 12 telefon modelinin (iPhone + Samsung) en ucuz SIFIR teklifini (Outlet/2.el ve
-# PTT AVM / Cicieksepeti / Idefix haric) gercek tarayiciyla (Playwright) ceker,
+# epey.com'daki 12 telefon modelinin (iPhone + Samsung) en ucuz SIFIR teklifini
+# SADECE guvenilir satici beyaz listesinden (SELLERS + DIRECT; Outlet/2.el ve
+# PTT AVM / Ciceksepeti / Idefix her durumda haric) gercek tarayiciyla (Playwright) ceker,
 # epey-state.json ile karsilastirip degisenleri Telegram'a bildirir, state'i yazar.
 # DUMP=1 ise tek seferlik tam listeyi gonderir (test/ilk calisma icin).
 import json, os, re, sys, urllib.request, urllib.parse
@@ -21,6 +22,32 @@ MODELS = [
     ("Galaxy A37 128", "samsung-galaxy-a37-5g-128gb"),
 ]
 EXCLUDE = {"pttavm-com", "ciceksepeti-com", "idefix-com"}
+
+# Guvenilir satici beyaz listesi: pazaryeri tekliflerinde satici adi bunlardan
+# biri olmali (norm() ile karsilastirilir; epey'de gorulen gercek yazimlar).
+SELLERS = {
+    "MediaMarkt",                          # Trendyol/HB; n11 "mediamarkt", Pazarama "MEDIAMARKT" norm ile ayni
+    "VATAN BİLGİSAYAR",
+    "Teknosa",
+    "Gürgençler Apple Yetkili Satıcı", "Gürgençler Apple", "Gürgençler Apple Premium Partner",
+    "Troy Apple Yetkili Satıcı", "Troy Apple", "TroyApple",  # TroyApple = n11 yazimi
+    "BittiBitiyor",
+    "Trendyol", "Hepsiburada", "n11", "Pazarama", "Amazon.com.tr",
+    "Turkcell Satış A.Ş.",                 # dikkat: "Turkcell Emre İletişim" gibi bayiler ESLESMEZ
+    "Xiaomi Resmi Mağazası", "Xiaomi Türkiye",
+}
+# Saticisiz (dogrudan) satis yapan magazalarin epey slug'lari.
+DIRECT = {"mediamarkt-com-tr", "vatanbilgisayar-com", "teknosa-com",
+          "a101-com-tr", "troyestore-com"}
+
+
+def norm(s):
+    """Turkce buyuk/kucuk harf guvenli karsilastirma: I/İ/ı/i hepsi 'i' olur."""
+    combining_dot = chr(0x0307)  # I-with-dot lower() kalintisi
+    return " ".join(s.split()).lower().replace(combining_dot, "").replace("ı", "i")
+
+
+ALLOWED = {norm(s) for s in SELLERS}
 STATE = "epey-state.json"
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 
@@ -41,9 +68,15 @@ def cheapest(html):
         slug, price = SLUG.search(b), PRICE.search(b)
         if not slug or not price or slug.group(1) in EXCLUDE:
             continue
+        st = SATICI.search(b)
+        if st:  # pazaryeri teklifi: satici beyaz listede olmali
+            if norm(st.group(1)) not in ALLOWED:
+                continue
+        elif slug.group(1) not in DIRECT:  # saticisiz teklif: dogrudan satan magaza olmali
+            continue
         p = int(price.group(1)) / 100  # urun_fiyat_sort kurus cinsinden
         if best is None or p < best[0]:
-            nm, lk, st = NAME.search(b), LINK.search(b), SATICI.search(b)
+            nm, lk = NAME.search(b), LINK.search(b)
             who = nm.group(1) if nm else slug.group(1)
             if st and st.group(1).strip().lower() != who.lower():
                 who += " (satıcı: %s)" % st.group(1).strip()
