@@ -1,11 +1,13 @@
 # epey.com'daki 12 telefon modelinin (iPhone + Samsung) en ucuz SIFIR teklifini
 # SADECE guvenilir satici beyaz listesinden (SELLERS + DIRECT; Outlet/2.el ve
-# PTT AVM / Ciceksepeti / Idefix her durumda haric) gercek tarayiciyla (Playwright) ceker,
-# epey-state.json ile karsilastirip degisenleri Telegram'a bildirir, state'i yazar.
+# PTT AVM / Ciceksepeti / Idefix her durumda haric) ceker, epey-state.json ile
+# karsilastirip degisenleri Telegram'a bildirir, state'i yazar.
+# Once duz HTTP (ev IP'sinde CF challenge yok, 12 sayfa ~15 sn); hepsi bos gelirse
+# ve PLAIN=1 degilse Playwright'a duser (Actions yedegi icin). PC'de PLAIN=1:
+# playwright kurulu degil, kurulmasi da gerekmiyor (import lazy).
 # DUMP=1 ise tek seferlik tam listeyi gonderir (test/ilk calisma icin).
-import json, os, re, sys, urllib.request, urllib.parse
+import json, os, re, sys, time, urllib.request, urllib.parse
 from urllib.parse import unquote
-from playwright.sync_api import sync_playwright
 
 MODELS = [
     ("iPhone 17 Pro Max 256", "apple-iphone-17-pro-max"),
@@ -98,9 +100,30 @@ def tg(text):
                            data, timeout=30).read()
 
 
+def blocked(pages):
+    return all("urun_fiyat_sort" not in h for h in pages.values())
+
+
+def fetch_plain():
+    """Duz HTTP: CF challenge gormeyen IP'lerde (ev) yeterli, tarayici gerekmez."""
+    out = {}
+    for name, slug in MODELS:
+        url = "https://www.epey.com/akilli-telefonlar/%s.html" % slug
+        html = ""
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": UA})
+            html = urllib.request.urlopen(req, timeout=30).read().decode("utf-8", "replace")
+        except Exception as e:
+            print("%s: fetch hata %s" % (name, e))
+        out[name] = html
+        time.sleep(1)  # ponytail: ev IP'sini CF'ye sevdirmeye devam; kaldirma
+    return out
+
+
 def fetch_all():
     """Tek tarayici baglami: ilk sayfada CF cozulur, cf_clearance cookie'si
     kalan sayfalarda tekrar kullanilir."""
+    from playwright.sync_api import sync_playwright  # lazy: PC'de kurulu degil
     out = {}
     with sync_playwright() as pw:
         browser = pw.chromium.launch(
@@ -133,12 +156,15 @@ def main():
         old = json.load(open(STATE, encoding="utf-8"))
     except Exception:
         old = {}
-    pages = fetch_all()
+    pages = fetch_plain()
+    if blocked(pages) and os.environ.get("PLAIN") != "1":
+        pages = fetch_all()  # datacenter IP: duz HTTP CF'ye takildi, tarayici dene
 
-    if all("urun_fiyat_sort" not in h for h in pages.values()):
+    if blocked(pages):
         if not os.path.exists(BLOCKFLAG):  # sadece ilk blokta mesaj at, retry'larda sus
             open(BLOCKFLAG, "w").write("1")
-            tg("Cloudflare epey.com'u engelledi (GitHub Actions IP) - duzelene kadar 10 dk'da bir denenecek")
+            kim = "ev IP" if os.environ.get("PLAIN") == "1" else "GitHub Actions IP"
+            tg("Cloudflare epey.com'u engelledi (%s) - duzelene kadar denemeye devam" % kim)
         print("BLOCKED by Cloudflare")
         sys.exit(1)
     if os.path.exists(BLOCKFLAG):
