@@ -45,7 +45,7 @@ def main():
     with open(os.path.join(REPO, "heartbeat.txt"), "w") as f:
         f.write(time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()) + "\n")
     g("add", "-A")
-    g("commit", "-m", "pc " + time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
+    g("commit", "-m", WHO + " " + time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
     g("push", "origin", "master")
 
 
