@@ -3,10 +3,13 @@
 12 telefon modelinin (iPhone + Samsung) epey.com en ucuz sifir teklifini guvenilir
 satici beyaz listesinden ceker, degisenleri Telegram'a bildirir. State: `epey-state.json`.
 
-**Asil motor: ev PC'si.** `pc_sweep.py` Gorev Zamanlayici ile 5 dk'da bir calisir
-(duz HTTP - ev IP'sinde Cloudflare challenge yok), her taramada `heartbeat.txt`
-guncellenip push'lanir. Bu klasorun canli kopyasi PC'de: `C:\Users\Asus\epey-fiyat-takip`
-(elle duzenleme yapma; degisiklikler bot commit'leriyle karisir).
+**Asil motor: 7/24 fisteki Android telefon** (Termux + cron, kurulum: `setup-phone.sh`).
+`pc_sweep.py` 5 dk'da bir calisir (duz HTTP - ev IP'sinde Cloudflare challenge yok),
+her taramada `heartbeat.txt` guncellenip push'lanir; commit damgasi cihazi soyler
+("phone ..."/"pc ..."). Ayni script Windows PC'de de calisir (Gorev Zamanlayici
+gorevi "epey-fiyat-takip", su an DEVRE DISI - tek yazar telefonda; telefon
+emekli olursa `Enable-ScheduledTask epey-fiyat-takip` ile PC devralir).
+PC'deki canli klon: `C:\Users\Asus\epey-fiyat-takip` (elle duzenleme yapma).
 
 **Bekci + yedek: GitHub Actions** (`check.yml`, ~30 dk'da bir). Kalp atisi 40 dk'dan
 eskiyse Telegram'a "PC sustu" uyarisi atar ve Playwright ile yedek taramayi dener
