@@ -7,7 +7,9 @@
 import os, socket, subprocess, sys, time
 
 REPO = os.path.dirname(os.path.abspath(__file__))
-NOWIN = 0x08000000  # CREATE_NO_WINDOW: pythonw altinda git konsolu acilmasin
+# Ayni dosya telefonda da (Termux) calisir; creationflags Windows'a ozel.
+NOWIN = 0x08000000 if os.name == "nt" else 0  # CREATE_NO_WINDOW: pythonw altinda git konsolu acilmasin
+WHO = "pc" if os.name == "nt" else "phone"  # commit damgasi: hangi cihaz canli, gecmisten okunur
 
 
 def g(*args):
