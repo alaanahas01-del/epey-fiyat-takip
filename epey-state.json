@@ -10,34 +10,34 @@
   "link": "https://www.amazon.com.tr/dp/B0FQG1C99S?m=A1UNQM1SR2CHM"
  },
  "iPhone 17 256": {
-  "fiyat": 77174.0,
+  "fiyat": 77090.0,
   "satici": "Amazon.com.tr",
-  "link": "https://www.amazon.com.tr/dp/B0FQFVL7G9?m=A1UNQM1SR2CHM"
+  "link": "https://www.amazon.com.tr/dp/B0FQFPJ86G?m=A1UNQM1SR2CHM"
  },
  "iPhone 16 128": {
-  "fiyat": 62399.0,
-  "satici": "Amazon.com.tr",
-  "link": "https://www.amazon.com.tr/dp/B0DGJ9XTZ1?m=A1UNQM1SR2CHM"
+  "fiyat": 62499.0,
+  "satici": "Amazon.com.tr (satıcı: Gürgençler Apple Premium Partner)",
+  "link": "https://www.amazon.com.tr/dp/B0DGJJPYGP?m=A33C2U4U8ZLWR2"
  },
  "iPhone 15 128": {
-  "fiyat": 47899.0,
-  "satici": "Media Markt",
-  "link": "https://www.mediamarkt.com.tr/tr/product/_apple-iphone-15-128-gb-akilli-telefon-siyah-mtp03tua-1232435.html"
+  "fiyat": 47889.0,
+  "satici": "n11.com (satıcı: mediamarkt)",
+  "link": "https://www.n11.com/urun/apple-iphone-15-128-gb-apple-turkiye-garantili-43821353?magaza=mediamarkt&renk=siyah&dahili-hafiza=128-gb"
  },
  "Galaxy S26 Ultra 256": {
-  "fiyat": 85274.0,
+  "fiyat": 85299.0,
   "satici": "Amazon.com.tr",
   "link": "https://www.amazon.com.tr/dp/B0GP1PT3D2?m=A1UNQM1SR2CHM"
  },
  "Galaxy S26 256": {
-  "fiyat": 54498.82,
-  "satici": "n11.com (satıcı: BittiBitiyor)",
-  "link": "https://www.n11.com/urun/samsung-galaxy-s26-256-gb-samsung-turkiye-garantili-120593615?magaza=bittibitiyor&renk=kobalt-mor&dahili-hafiza=256-gb"
+  "fiyat": 53999.0,
+  "satici": "Amazon.com.tr (satıcı: BittiBitiyor)",
+  "link": "https://www.amazon.com.tr/dp/B0GP18RN2L?m=A18TZ44FTYYFUW"
  },
  "Galaxy S25 FE 256": {
-  "fiyat": 35299.0,
-  "satici": "Trendyol",
-  "link": "https://www.trendyol.com/samsung/galaxy-s25-fe-8gb-256gb-siyah-p-984233972?merchantId=968&v=tek-ebat"
+  "fiyat": 34999.0,
+  "satici": "A101",
+  "link": "https://www.a101.com.tr/elektronik/samsung-galaxy-s25-fe-256-gb-8-gb-ram-cep-telefonu-siyah_p-26065436"
  },
  "Galaxy A57 256": {
   "fiyat": 27699.0,
