@@ -1,6 +1,6 @@
 # epey fiyat takibi
 
-12 telefon modelinin (iPhone + Samsung) epey.com en ucuz sifir teklifini guvenilir
+5 iPhone modelinin epey.com en ucuz sifir teklifini guvenilir
 satici beyaz listesinden ceker, degisenleri Telegram'a bildirir. State: `epey-state.json`.
 
 **Asil motor: 7/24 fisteki Android telefon** (Termux + cron, kurulum: `setup-phone.sh`).

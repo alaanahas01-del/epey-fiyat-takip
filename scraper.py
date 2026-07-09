@@ -1,8 +1,8 @@
-# epey.com'daki 12 telefon modelinin (iPhone + Samsung) en ucuz SIFIR teklifini
+# epey.com'daki 5 iPhone modelinin en ucuz SIFIR teklifini
 # SADECE guvenilir satici beyaz listesinden (SELLERS + DIRECT; Outlet/2.el ve
 # PTT AVM / Ciceksepeti / Idefix her durumda haric) ceker, epey-state.json ile
 # karsilastirip degisenleri Telegram'a bildirir, state'i yazar.
-# Once duz HTTP (ev IP'sinde CF challenge yok, 12 sayfa ~15 sn); hepsi bos gelirse
+# Once duz HTTP (ev IP'sinde CF challenge yok, 5 sayfa ~6 sn); hepsi bos gelirse
 # ve PLAIN=1 degilse Playwright'a duser (Actions yedegi icin). PC'de PLAIN=1:
 # playwright kurulu degil, kurulmasi da gerekmiyor (import lazy).
 # DUMP=1 ise tek seferlik tam listeyi gonderir (test/ilk calisma icin).
@@ -15,13 +15,6 @@ MODELS = [
     ("iPhone 17 256", "apple-iphone-17"),
     ("iPhone 16 128", "apple-iphone-16"),
     ("iPhone 15 128", "apple-iphone-15"),
-    ("Galaxy S26 Ultra 256", "samsung-galaxy-s26-ultra"),
-    ("Galaxy S26 256", "samsung-galaxy-s26"),
-    ("Galaxy S25 FE 256", "samsung-galaxy-s25-fe"),
-    ("Galaxy A57 256", "samsung-galaxy-a57-5g-256gb"),
-    ("Galaxy A57 128", "samsung-galaxy-a57"),
-    ("Galaxy A37 256", "samsung-galaxy-a37"),
-    ("Galaxy A37 128", "samsung-galaxy-a37-5g-128gb"),
 ]
 EXCLUDE = {"pttavm-com", "ciceksepeti-com", "idefix-com"}
 
@@ -165,7 +158,7 @@ def main():
         print("BLOCKED by Cloudflare")
         sys.exit(1)
 
-    new = dict(old)
+    new = {n: v for n, v in old.items() if n in {m[0] for m in MODELS}}  # listeden cikan model state'ten de duser
     lines = []
     for name, _ in MODELS:
         h = pages.get(name, "")
