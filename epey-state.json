@@ -1,8 +1,8 @@
 {
  "iPhone 17 Pro Max 256": {
-  "fiyat": 120899.0,
-  "satici": "Turkcell Pasaj (satıcı: Turkcell Satış A.Ş.)",
-  "link": "https://www.turkcell.com.tr/pasaj/cep-telefonu/ios-telefonlar/apple-iphone-17/iphone-17-pro-max-256-gb?seller=1&color=1017367"
+  "fiyat": 119999.0,
+  "satici": "A101",
+  "link": "https://www.a101.com.tr/elektronik/apple-iphone-17-pro-max-256-gb-cep-telefonu-abis_p-26066404"
  },
  "iPhone 17 Pro 256": {
   "fiyat": 107999.0,
@@ -10,18 +10,18 @@
   "link": "https://www.turkcell.com.tr/pasaj/cep-telefonu/ios-telefonlar/apple-iphone-17/iphone-17-pro-256-gb?seller=1&color=1017367"
  },
  "iPhone 17 256": {
-  "fiyat": 76999.0,
+  "fiyat": 77099.0,
   "satici": "Trendyol",
-  "link": "https://www.trendyol.com/apple/iphone-17-256gb-sis-mavisi-p-985256848?merchantId=968&v=tek-ebat"
+  "link": "https://www.trendyol.com/apple/iphone-17-256gb-siyah-p-985256842?merchantId=968&v=tek-ebat"
  },
  "iPhone 16 128": {
-  "fiyat": 62399.0,
+  "fiyat": 62379.0,
   "satici": "n11.com (satıcı: mediamarkt)",
   "link": "https://www.n11.com/urun/apple-iphone-16-128-gb-apple-turkiye-garantili-59257801?magaza=mediamarkt&renk=siyah&dahili-hafiza=128-gb"
  },
  "iPhone 15 128": {
   "fiyat": 47799.0,
-  "satici": "Trendyol (satıcı: MediaMarkt)",
-  "link": "https://www.trendyol.com/apple/iphone-15-128-gb-siyah-p-762254878?merchantId=275331&v=tek-ebat"
+  "satici": "Vatan Bilgisayar",
+  "link": "https://www.vatanbilgisayar.com/iphone-15-128-gb-akilli-telefon-mavi.html"
  }
 }
